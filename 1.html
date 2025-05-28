@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>景点App UI - 沈阳风采</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', 'Inter', sans-serif;
+            overscroll-behavior: none;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .custom-header {
+            background-color: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 30;
+        }
+
+        .custom-search-bar {
+            display: flex;
+            align-items: center;
+            background-color: rgba(230, 230, 230, 0.7);
+            border-radius: 25px;
+            padding: 8px 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            color: #555;
+            font-weight: 500;
+        }
+        .custom-search-bar svg {
+            width: 16px;
+            height: 16px;
+            color: #666;
+            margin-right: 8px;
+        }
+
+        .tabs-nav-container {
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 12px 16px;
+            position: sticky;
+            /* top value will be set by JS */
+            z-index: 25;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .tabs-buttons {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+        .tab-button {
+            padding: 10px 18px;
+            border-radius: 20px;
+            background-color: rgba(224, 224, 224, 0.8);
+            color: #333;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0,0,0,0.05);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .tab-button.active,
+        .tab-button:hover {
+            background-image: linear-gradient(to right, #6DD5FA, #2980B9);
+            color: white;
+            box-shadow: 0 4px 8px rgba(41, 128, 185, 0.3);
+            transform: translateY(-2px);
+            border-color: transparent;
+        }
+
+        /* Image Slider - Modified for Tilted Effect */
+        .slider-container {
+            perspective: 1500px; /* Increased perspective for more depth with rotation */
+            position: relative;
+            height: 580px; /* Adjust as needed */
+            overflow: hidden;
+            margin-top: 10px; /* Add some space from tabs */
+        }
+
+        .slide {
+            position: absolute;
+            width: 65%; /* Adjust width of the central active slide */
+            height: 95%; /* Adjust height to allow for rotation visibility */
+            top: 2.5%; /* Center vertically */
+            left: 50%;
+            transform-origin: center center; /* Rotate around the center */
+            /* Default state: smaller, rotated, and to the side */
+            transform: translateX(-50%) scale(0.75) rotateY(0deg) translateZ(-250px);
+            opacity: 0.6;
+            transition: transform 0.7s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.7s cubic-bezier(0.25, 0.8, 0.25, 1);
+            border-radius: 1.25rem; /* 20px */
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            background-color: #e0e0e0;
+            cursor: pointer;
+        }
+
+        .slide.active {
+            /* Active slide: centered, larger, not rotated, and forward */
+            transform: translateX(-50%) scale(1) rotateY(0deg) translateZ(0px);
+            opacity: 1;
+            z-index: 10;
+        }
+
+        .slide.prev {
+            /* Previous slide: to the left, smaller, rotated inwards */
+            transform: translateX(-100%) scale(0.8) rotateY(35deg) translateZ(-150px);
+            opacity: 0.7;
+            z-index: 5;
+        }
+
+        .slide.next {
+            /* Next slide: to the right, smaller, rotated inwards */
+            transform: translateX(0%) scale(0.8) rotateY(-35deg) translateZ(-150px);
+            opacity: 0.7;
+            z-index: 5;
+        }
+
+        /* States for slides further away, ensuring they are less prominent and further rotated/scaled down */
+        .slide.far-prev {
+            transform: translateX(-130%) scale(0.65) rotateY(45deg) translateZ(-300px);
+            opacity: 0;
+            z-index: 1;
+        }
+        .slide.far-next {
+            transform: translateX(30%) scale(0.65) rotateY(-45deg) translateZ(-300px);
+            opacity: 0;
+            z-index: 1;
+        }
+
+
+        .slide img { width: 100%; height: 100%; object-fit: cover; }
+        .slide-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1.25rem;
+            background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0) 100%);
+            color: white;
+            display: flex; /* For city name positioning */
+            flex-direction: column; /* Stack title/desc above city */
+            justify-content: flex-end; /* Align content to bottom */
+            height: 50%; /* Give content area more defined height */
+        }
+        .slide-content .city-badge { /* Style for "沈阳" */
+            position: absolute;
+            left: 1.25rem; /* 20px */
+            bottom: calc(1.25rem + 80px); /* Position above price and details, adjust 80px as needed */
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 0.3rem 0.8rem; /* 6px 12px */
+            border-radius: 0.75rem; /* 12px */
+            font-size: 0.9rem; /* 14px */
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+        .slide-content .city-badge svg { /* Optional icon for city badge */
+            width: 1em;
+            height: 1em;
+            margin-right: 0.3em;
+        }
+
+        .slide-content h3 { font-size: 1.375rem; font-weight: 700; margin-bottom: 0.375rem; text-shadow: 0 1px 3px rgba(0,0,0,0.7); }
+        .slide-content p { font-size: 0.875rem; margin-bottom: 0.75rem; text-shadow: 0 1px 2px rgba(0,0,0,0.6); }
+        .slide-content .price {
+            font-size: 1.75rem;
+            font-weight: 700;
+            position: absolute;
+            bottom: 1.25rem;
+            right: 1.25rem;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+        }
+
+
+        .custom-bottom-nav {
+            background-color: #ffffff;
+            box-shadow: 0 -3px 8px rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0 8px 0;
+            z-index: 100;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            position: sticky;
+            bottom: 0;
+        }
+        .custom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #888;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: color 0.2s;
+            padding: 4px 8px;
+        }
+        .custom-nav-item svg {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 2px;
+            transition: transform 0.2s;
+        }
+        .custom-nav-item.active { color: #2980B9; }
+        .custom-nav-item.active svg { transform: scale(1.1); }
+        .custom-nav-item:hover { color: #5c9dc7; }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-gray-100 max-w-md mx-auto shadow-xl min-h-screen flex flex-col">
+    <header class="p-4 custom-header">
+        <div class="flex justify-between items-center mb-2">
+            <div class="text-sm font-medium text-gray-700">10:00</div>
+            <div class="flex items-center space-x-2 text-sm text-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12z" clip-rule="evenodd" />
+                    <path d="M10 3.5a.5.5 0 01.5.5v5a.5.5 0 01-1 0V4a.5.5 0 01.5-.5z" />
+                    <path d="M10 8.5a.5.5 0 01.5.5v2.086l1.793 1.793a.5.5 0 01-.707.707L10 11.207V9a.5.5 0 01.5-.5z" />
+                </svg>
+                <span>19~26°C</span>
+            </div>
+        </div>
+        <div class="custom-search-bar">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
+            <span>五一 热门 景点 攻略</span>
+        </div>
+    </header>
+
+    <nav id="tabsNav" class="tabs-nav-container">
+        <div class="tabs-buttons no-scrollbar">
+            <button class="tab-button active">剧情畅游</button>
+            <button class="tab-button">夏日胜景</button>
+            <button class="tab-button">亲子出行</button>
+            <button class="tab-button">商务旅行</button>
+            <button class="tab-button">更多主题</button>
+            <button class="tab-button">节日特惠</button>
+        </div>
+    </nav>
+
+    <main class="flex-grow py-6 bg-gray-50">
+        <div id="imageSlider" class="slider-container">
+            </div>
+    </main>
+
+    <footer class="custom-bottom-nav">
+        <button class="custom-nav-item active">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
+            <span>精选</span>
+        </button>
+        <button class="custom-nav-item">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4H7zm0 0L21 21m-14-14v6m2-3h2m-2 3h2M5 5h2m2 0h2m2 0h2M5 8h2m2 0h2m2 0h2m0 0H5m14-3v6m0 0v6m0-6H5m14 0H5" />
+            </svg>
+            <span>发现</span>
+        </button>
+        <button class="custom-nav-item">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <span>商城</span>
+        </button>
+        <button class="custom-nav-item">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            <span>我的</span>
+        </button>
+    </footer>
+
+    <script>
+        const slider = document.getElementById('imageSlider');
+        const slidesData = [ // 将城市名称改为沈阳
+            {
+                id: 1,
+                imageUrl: 'image/gugong.png',
+                title: '沈阳故宫 ★★★★★',
+                description: '清朝入关前皇宫，历史的见证',
+                price: '¥60',
+                city: '沈阳'
+            },
+            {
+                id: 2,
+                imageUrl: 'image/dashuaifu.png',
+                title: '张氏帅府',
+                description: '民国奉系军阀张作霖官邸',
+                price: '¥50',
+                city: '沈阳'
+            },
+            {
+                id: 3,
+                imageUrl: 'image/zhongjie.png',
+                title: '中街步行街',
+                description: '中国第一条商业步行街',
+                price: '¥Free',
+                city: '沈阳'
+            },
+            {
+                id: 4,
+                imageUrl: 'https://placehold.co/600x900/FCE2A2/333333?text=北陵公园',
+                title: '北陵公园 (昭陵)',
+                description: '清太宗皇太极与孝端文皇后陵寝',
+                price: '¥30',
+                city: '沈阳'
+            },
+            {
+                id: 5,
+                imageUrl: 'image/918.jpg',
+                title: '九·一八历史博物馆',
+                description: '铭记历史，勿忘国耻',
+                price: '¥Free',
+                city: '沈阳'
+            }
+        ];
+
+        let currentIndex = 0;
+
+        function createSlideElement(slideData, index) {
+            const slideDiv = document.createElement('div');
+            slideDiv.classList.add('slide');
+            slideDiv.dataset.index = index;
+            // 添加城市徽章到卡片内容
+            slideDiv.innerHTML = `
+                <img src="${slideData.imageUrl}" alt="${slideData.title}" onerror="this.onerror=null;this.src='https://placehold.co/600x900/cccccc/969696?text=图片加载失败';">
+                <div class="slide-content">
+                    <div class="city-badge">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"> <path fill-rule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.976 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.274 1.765 11.842 11.842 0 00.757.433c.091.046.185.098.28.14l.019.008.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clip-rule="evenodd" />
+                        </svg>
+                        ${slideData.city}
+                    </div>
+                    <div> <h3>${slideData.title}</h3>
+                        <p>${slideData.description}</p>
+                    </div>
+                    <span class="price">${slideData.price}</span>
+                </div>
+            `;
+            slideDiv.addEventListener('click', () => {
+                if (slideDiv.classList.contains('prev') || slideDiv.classList.contains('next') || slideDiv.classList.contains('far-prev') || slideDiv.classList.contains('far-next')) {
+                    goToSlide(parseInt(slideDiv.dataset.index));
+                }
+            });
+            return slideDiv;
+        }
+
+        function updateSlider() {
+            const slides = slider.querySelectorAll('.slide');
+            slides.forEach((slide) => {
+                slide.classList.remove('active', 'prev', 'next', 'far-prev', 'far-next');
+                const effectiveIndex = parseInt(slide.dataset.index);
+                let newClass = '';
+
+                if (effectiveIndex === currentIndex) {
+                    newClass = 'active';
+                } else if (effectiveIndex === (currentIndex - 1 + slidesData.length) % slidesData.length) {
+                    newClass = 'prev';
+                } else if (effectiveIndex === (currentIndex + 1) % slidesData.length) {
+                    newClass = 'next';
+                } else if (effectiveIndex === (currentIndex - 2 + slidesData.length) % slidesData.length) {
+                    newClass = 'far-prev';
+                } else if (effectiveIndex === (currentIndex + 2) % slidesData.length) {
+                    newClass = 'far-next';
+                } else {
+                    const diff = effectiveIndex - currentIndex;
+                    const length = slidesData.length;
+                    let normalizedDiff = diff;
+                    if (Math.abs(diff) > length / 2) {
+                        normalizedDiff = diff > 0 ? diff - length : diff + length;
+                    }
+                    if (normalizedDiff < -2 ) newClass = 'far-prev';
+                    else if (normalizedDiff > 2) newClass = 'far-next';
+                }
+                if (newClass) slide.classList.add(newClass);
+            });
+        }
+
+        function goToSlide(index) {
+            currentIndex = (index + slidesData.length) % slidesData.length;
+            updateSlider();
+        }
+
+        function initSlider() {
+            slidesData.forEach((data, index) => {
+                slider.appendChild(createSlideElement(data, index));
+            });
+            if (slidesData.length > 0) goToSlide(0);
+        }
+        initSlider();
+
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', function() {
+                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        document.querySelectorAll('.custom-nav-item').forEach(button => {
+            button.addEventListener('click', function() {
+                document.querySelectorAll('.custom-nav-item').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') goToSlide(currentIndex - 1);
+            else if (e.key === 'ArrowRight') goToSlide(currentIndex + 1);
+        });
+
+        const headerEl = document.querySelector('.custom-header');
+        const tabsNavEl = document.getElementById('tabsNav'); // 使用ID获取
+        if (headerEl && tabsNavEl) {
+            const setTabsNavTop = () => {
+                const headerHeight = headerEl.offsetHeight;
+                tabsNavEl.style.top = `${headerHeight}px`;
+            };
+            setTabsNavTop(); // Initial set
+            // Consider ResizeObserver if header height can change dynamically after load
+            window.addEventListener('resize', setTabsNavTop);
+        }
+    </script>
+</body>
+</html>

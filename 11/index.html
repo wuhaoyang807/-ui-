@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>沈阳剧情畅游</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 顶部状态栏 -->
+        <div class="status-bar">
+            <div class="time">10:00</div>
+            <div class="status-icons">
+                <span class="signal"></span>
+                <span class="wifi"></span>
+                <span class="battery"></span>
+            </div>
+        </div>
+
+        <!-- 顶部信息栏 -->
+        <div class="info-bar">
+            <div class="weather-info">
+                <div class="temp">
+                    <span class="temp-icon">🌤️</span>
+                    <span class="temp-range">16~24°C</span>
+                </div>
+                <div class="clothing-suggestion">
+                    <span class="clothing-icon">👕</span>
+                    <span class="clothing-text">宜穿短袖</span>
+                </div>
+            </div>
+            <div class="search-bar">
+                <span class="search-icon">🔍</span>
+                <span class="search-text">五一热门景点攻略</span>
+            </div>
+        </div>
+
+        <!-- 分类导航 -->
+        <div class="category-nav">
+            <div class="category active">剧情畅游</div>
+            <div class="category">夏日胜景</div>
+            <div class="category">亲子出行</div>
+            <div class="category">商务旅行</div>
+        </div>
+
+        <!-- 可滑动卡片区域 -->
+        <div class="swiper-container">
+            <div class="swiper-wrapper">
+                <!-- 卡片1 - 清宫秘事 -->
+                <div class="swiper-slide">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-time">阵营 | 8-10h</div>
+                            <div class="card-favorite">★</div>
+                        </div>
+                        <div class="card-images-stack">
+                            <div class="card-image-wrapper main-image">
+                                <img src="placeholder-1.jpg" alt="沈阳故宫" class="card-img">
+                            </div>
+                            <div class="card-image-wrapper second-image">
+                                <img src="placeholder-2.jpg" alt="沈阳故宫内景" class="card-img">
+                            </div>
+                            <div class="card-image-wrapper third-image">
+                                <img src="placeholder-3.jpg" alt="沈阳故宫夜景" class="card-img">
+                            </div>
+                        </div>
+                        <div class="card-info">
+                            <div class="card-title">清宫秘事 ⭐⭐⭐⭐⭐</div>
+                            <div class="card-subtitle">沈阳故宫 1636清朝风情街总统府</div>
+                            <div class="card-price">¥ 98</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 卡片2 - 中街老巷探秘 -->
+                <div class="swiper-slide">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-time">间谍 | 6-8h</div>
+                            <div class="card-favorite">★</div>
+                        </div>
+                        <div class="card-images-stack">
+                            <div class="card-image-wrapper main-image">
+                                <img src="placeholder-2.jpg" alt="中街老巷" class="card-img">
+                            </div>
+                            <div class="card-image-wrapper second-image">
+                                <img src="placeholder-3.jpg" alt="中街民国风吃街" class="card-img">
+                            </div>
+                            <div class="card-image-wrapper third-image">
+                                <img src="placeholder-1.jpg" alt="中街夜景" class="card-img">
+                            </div>
+                        </div>
+                        <div class="card-info">
+                            <div class="card-title">中街老巷探秘 ⭐⭐⭐⭐</div>
+                            <div class="card-subtitle">沈阳中街 百年老巷道文化市集</div>
+                            <div class="card-price">¥ 105</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 卡片3 - 都市夜景 -->
+                <div class="swiper-slide">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-time">海报团 | 4-6h</div>
+                            <div class="card-favorite">★</div>
+                        </div>
+                        <div class="card-images-stack">
+                            <div class="card-image-wrapper main-image">
+                                <img src="placeholder-3.jpg" alt="沈阳夜景" class="card-img">
+                            </div>
+                            <div class="card-image-wrapper second-image">
+                                <img src="placeholder-1.jpg" alt="沈阳高楼" class="card-img">
+                            </div>
+                            <div class="card-image-wrapper third-image">
+                                <img src="placeholder-2.jpg" alt="沈阳大庭" class="card-img">
+                            </div>
+                        </div>
+                        <div class="card-info">
+                            <div class="card-title">都市夜景 ⭐⭐⭐⭐⭐</div>
+                            <div class="card-subtitle">都市 打卡全城地标建筑</div>
+                            <div class="card-price">¥ 123</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 卡片4 - 北陵公园 -->
+                <div class="swiper-slide">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-time">目击者 | 5-7h</div>
+                            <div class="card-favorite">★</div>
+                        </div>
+                        <div class="card-images-stack">
+                            <div class="card-image-wrapper main-image">
+                                <img src="placeholder-1.jpg" alt="北陵公园" class="card-img">
+                            </div>
+                            <div class="card-image-wrapper second-image">
+                                <img src="placeholder-2.jpg" alt="北陵碑道" class="card-img">
+                            </div>
+                            <div class="card-image-wrapper third-image">
+                                <img src="placeholder-3.jpg" alt="北陵树林" class="card-img">
+                            </div>
+                        </div>
+                        <div class="card-info">
+                            <div class="card-title">北陵公园 ⭐⭐⭐⭐</div>
+                            <div class="card-subtitle">皇家园林 历史文化胜地</div>
+                            <div class="card-price">¥ 80</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 分页指示器 -->
+            <div class="swiper-pagination"></div>
+        </div>
+
+        <!-- 地点标签 -->
+        <div class="location-tag">
+            <span class="location-icon">📍</span>
+            <span class="location-text">沈阳</span>
+        </div>
+
+        <!-- 底部导航 -->
+        <div class="bottom-nav">
+            <div class="nav-item active">
+                <div class="nav-icon">💚</div>
+                <div class="nav-text">精选</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon">🎯</div>
+                <div class="nav-text">发现</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon">🛒</div>
+                <div class="nav-text">商城</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon">👤</div>
+                <div class="nav-text">我的</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

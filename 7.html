@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>沈阳游玩路线</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', 'Inter', sans-serif;
+            overscroll-behavior: none;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            margin: 0;
+            background-color: #F0F4F8; /* 整体背景色 */
+        }
+        .app-container {
+            max-width: 420px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .header-floating-container { /* 浮动头部容器 */
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 1rem; /* 16px */
+            z-index: 30;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem; /* 12px */
+            background: linear-gradient(to bottom, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.8) 70%, rgba(255,255,255,0) 100%);
+            padding-bottom: 1.25rem; /* 20px */
+        }
+        .top-bar-controls { /* 返回按钮和搜索栏容器 */
+            display: flex;
+            align-items: center;
+            gap: 0.75rem; /* 12px */
+        }
+        .back-button-custom {
+            padding: 0.625rem; /* 10px */
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s;
+            flex-shrink: 0; /* 防止返回按钮被压缩 */
+        }
+        .back-button-custom:hover {
+            background-color: rgba(240, 240, 240, 0.98);
+            transform: scale(1.05);
+        }
+        .back-button-custom svg {
+            width: 1.5rem; /* 24px */
+            height: 1.5rem; /* 24px */
+            color: #333;
+        }
+        .search-bar-custom {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.98);
+            border-radius: 25px;
+            padding: 0.625rem 1.125rem; /* 10px 18px */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .search-bar-custom input {
+            flex-grow: 1;
+            border: none;
+            outline: none;
+            background-color: transparent;
+            font-size: 0.9375rem; /* 15px */
+            color: #333;
+            font-weight: 500;
+        }
+        .search-bar-custom input::placeholder {
+            color: #888;
+            font-weight: 400;
+        }
+        .search-bar-custom svg {
+            width: 1.25rem; /* 20px */
+            height: 1.25rem; /* 20px */
+            color: #666;
+            margin-right: 0.625rem; /* 10px */
+        }
+        .filter-buttons-outer-container { /* 筛选按钮外部容器，用于居中 */
+             display: flex;
+             justify-content: center;
+             padding: 0 0.625rem; /* 10px */
+        }
+        .filter-buttons-scrollable { /* 筛选按钮实际滚动容器 */
+            display: flex;
+            gap: 0.625rem; /* 10px */
+            overflow-x: auto;
+            padding-bottom: 0.25rem; /* 给滚动条留空间或只是视觉间距 */
+            scrollbar-width: none; /* Firefox */
+        }
+        .filter-buttons-scrollable::-webkit-scrollbar {
+            display: none; /* Chrome, Safari */
+        }
+        .filter-button {
+            padding: 0.625rem 1.125rem; /* 10px 18px */
+            border-radius: 20px;
+            background-color: rgba(230, 237, 245, 0.85); /* 浅蓝灰色按钮背景 */
+            color: #334155; /* 深蓝灰色文字 */
+            font-size: 0.8125rem; /* 13px */
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0,0,0,0.05);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .filter-button.active,
+        .filter-button:hover {
+            background-image: linear-gradient(to right, #60A5FA, #3B82F6); /* 蓝色渐变 */
+            color: white;
+            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+            transform: translateY(-1px);
+            border-color: transparent;
+        }
+
+        .main-content-scrollable { /* 包裹地图和卡片，使其可以一起滚动 */
+            flex-grow: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        .map-area-placeholder {
+            background-color: #DDEBFF; /* 地图的浅色背景 */
+            min-height: 350px;
+            padding-top: 150px;  /* 为浮动头部预留空间 */
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+        }
+        .map-area-placeholder svg {
+            display: block;
+            width: 100%;
+            height: 100%;
+            min-height: 250px;
+        }
+        .route-line-svg {
+            stroke: #3B82F6; /* 路线颜色 */
+            stroke-width: 3.5; /* 加粗一点 */
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+            stroke-dasharray: 7 3; /* 虚线效果 */
+            animation: dashdraw 0.7s linear infinite;
+        }
+        @keyframes dashdraw {
+            to { stroke-dashoffset: -20; } /* 10的倍数 */
+        }
+        .location-marker-svg circle {
+            stroke: white;
+            stroke-width: 2;
+            r: 7;
+            transition: r 0.2s ease, fill 0.2s ease;
+        }
+        .location-marker-svg:hover circle {
+            r: 9;
+        }
+        .location-marker-svg text {
+            font-size: 11px; /* 稍大一点 */
+            fill: #1E293B; /* 更深的文字颜色 */
+            font-weight: 600; /* 加粗 */
+            text-anchor: middle;
+            paint-order: stroke;
+            stroke: rgba(255,255,255,0.8); /* 半透明描边 */
+            stroke-width: 2.5px;
+        }
+
+        .cards-section-background { /* 卡片区域的白色背景和顶部阴影 */
+            background-color: white;
+            padding-top: 0.5rem; /* 8px */
+            padding-bottom: 1rem; /* 16px */
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            position: relative;
+            z-index: 1;
+        }
+        .location-cards-container-scroll {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            padding: 1rem 0; /* 上下padding */
+            gap: 0.75rem; /* 12px */
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .location-cards-container-scroll::-webkit-scrollbar { display: none; }
+
+        .location-card {
+            flex: 0 0 auto;
+            width: 170px;
+            height: 240px;
+            background-color: white;
+            border-radius: 1rem; /* 16px */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+            scroll-snap-align: center;
+            display: flex;
+            flex-direction: column;
+            position: relative; /* 为了序号徽章的绝对定位 */
+        }
+        .location-card img {
+            width: 100%;
+            height: 130px;
+            object-fit: cover;
+        }
+        .location-card .info {
+            padding: 0.75rem; /* 12px */
+            text-align: center;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+        }
+        .location-card .title {
+            font-size: 1rem; /* 16px */
+            font-weight: 700;
+            color: #1E293B; /* 深蓝灰色 */
+            margin-bottom: 0.25rem; /* 4px */
+            line-height: 1.3;
+        }
+        .location-card .details {
+            font-size: 0.8125rem; /* 13px */
+            color: #475569; /* 中蓝灰色 */
+            line-height: 1.4;
+            margin-bottom: 0.25rem;
+        }
+        .location-card .distance {
+            font-size: 0.75rem; /* 12px */
+            color: #3B82F6; /* 蓝色 */
+            font-weight: 500;
+        }
+        .location-card.is-center {
+            transform: scale(1.08); /* 放大效果更明显 */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+            z-index: 10;
+        }
+        .location-cards-container-scroll::before,
+        .location-cards-container-scroll::after { /* 用于实现卡片居中对齐的辅助元素 */
+            content: '';
+            flex: 0 0 auto;
+            /* width set by JS */
+        }
+         .location-card .number-badge { /* 序号标记 */
+            position: absolute;
+            top: 0.5rem; /* 8px */
+            left: 0.5rem; /* 8px */
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+        .star-on-card { /* 选中卡片上的星标 */
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            color: #FBBF24;
+            background-color: rgba(0,0,0,0.4);
+            border-radius: 50%;
+            padding: 0.25rem; /* 4px */
+            width: 28px; /* 增大 */
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+         .star-on-card svg {
+            width: 1rem; /* 16px */
+            height: 1rem;
+        }
+
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 420px; /* 确保与app-container一致 */
+            margin: 0 auto; /* 居中 */
+            background-color: #ffffff;
+            box-shadow: 0 -3px 10px rgba(0,0,0,0.07);
+            display: flex;
+            justify-content: space-around;
+            padding: 0.75rem 0; /* 12px */
+            z-index: 100;
+            border-top-left-radius: 1.25rem; /* 20px */
+            border-top-right-radius: 1.25rem; /* 20px */
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #6B7280; /* 未激活颜色 */
+            font-size: 0.75rem; /* 12px */
+            font-weight: 500;
+            cursor: pointer;
+            transition: color 0.2s, transform 0.2s;
+            padding: 0.25rem 0.5rem; /* 4px 8px */
+        }
+        .nav-item svg {
+            width: 1.5rem; /* 24px */
+            height: 1.5rem; /* 24px */
+            margin-bottom: 0.125rem; /* 2px */
+        }
+        .nav-item.active {
+            color: #2563EB; /* 激活颜色 (Tailwind blue-600) */
+            transform: translateY(-2px); /* 轻微上浮 */
+        }
+        .nav-item:hover {
+            color: #3B82F6; /* 悬停颜色 */
+        }
+
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header-floating-container">
+            <div class="top-bar-controls">
+                <button class="back-button-custom" aria-label="返回">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <div class="search-bar-custom">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                    </svg>
+                    <input type="text" placeholder="搜索沈阳目的地、景点...">
+                </div>
+            </div>
+            <div class="filter-buttons-outer-container">
+                <div class="filter-buttons-scrollable">
+                    <button class="filter-button active">高分路线</button>
+                    <button class="filter-button">经典必游</button>
+                    <button class="filter-button">历史印记</button>
+                    <button class="filter-button">休闲周末</button>
+                    <button class="filter-button">美食探店</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content-scrollable">
+            <div class="map-area-placeholder">
+                <svg id="routeMapSVG" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid meet">
+                    <image href="https://placehold.co/800x600/DDEBFF/A0B3CC?text=沈阳市抽象地图" x="0" y="0" width="100%" height="100%"/>
+                    <polyline id="routePathSVG" class="route-line-svg" points=""></polyline>
+                    <g id="locationMarkersGroupSVG"></g>
+                </svg>
+            </div>
+
+            <div class="cards-section-background">
+                <div class="location-cards-container-scroll" id="locationCardsContainer">
+                    </div>
+            </div>
+
+            <div class="p-4 text-sm text-gray-700 bg-white mt-[-1px] shadow-inner"> <h3 class="font-semibold text-lg mb-2 text-gray-800">路线概览：沈阳经典一日游</h3>
+                <p class="leading-relaxed">
+                    本条路线串联了沈阳最具代表性的三大历史文化地标：【沈阳故宫】的皇家气派，【中街】的百年繁华，以及【大帅府】的民国往事。一日之内，带您领略盛京从古至今的魅力变迁。
+                </p>
+            </div>
+             <div class="h-10 bg-white"></div> </div>
+
+        <nav class="bottom-nav">
+            <button class="nav-item active">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18V6.375c0-.621.504-1.125 1.125-1.125H9M12 15.75h3m-3 3h3M12 7.5V4.5m0 3V4.5m0 3l3-1.5m-3 1.5l-3-1.5m3 1.5V15m0 .75V15m0 .75V18m0 .75h.008v.008H12v-.008zm0 0H9.75m2.25 0H14.25" /></svg>
+                精选
+            </button>
+            <button class="nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12.75 3.03v.568c0 .334.148.65.405.864l1.068.89c.442.369.535 1.01.216 1.49l-.51.766a2.25 2.25 0 01-1.161.886l-.143.048a1.125 1.125 0 00-.11 1.963l.13.39a1.125 1.125 0 001.125 1.125h2.25M12.75 3.03V2.25A2.25 2.25 0 0010.5 0h-3A2.25 2.25 0 005.25 2.25v.781c0 .334.148.65.405.864l1.068.89c.442.369.535 1.01.216 1.49l-.51.766a2.25 2.25 0 01-1.161.886l-.143.048a1.125 1.125 0 00-.11 1.963l.13.39a1.125 1.125 0 001.125 1.125h2.25m0-9.45l.148-.049a2.25 2.25 0 012.104 0l.148.049M12.75 6.195L12 6.695m.75-.5l.75.5m0-3l-.75-.5M12.75 3.03l-.75-.5M12 6.695L9 9.45m3-2.755L15 9.45M12 6.695L9 3.94m3 2.755L15 3.94m0 5.511L12 12.205m0 0L9 9.45m3 2.755l3 2.755M9.75 15.75h4.5m-4.5 0a2.25 2.25 0 01-2.25-2.25V12a2.25 2.25 0 012.25-2.25h4.5A2.25 2.25 0 0116.5 12v1.5a2.25 2.25 0 01-2.25 2.25h-4.5z" /></svg>
+                发现
+            </button>
+            <button class="nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
+                商城
+            </button>
+            <button class="nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
+                我的
+            </button>
+        </nav>
+    </div>
+
+    <script>
+        const attractions = [
+            { id: 1, name: "沈阳故宫", details: "清初皇宫，世界文化遗产", distance: "市中心", img: "image/gugong.png", mapCoords: { x: 150, y: 130 } },
+            { id: 2, name: "张氏帅府", details: "张作霖张学良官邸私宅", distance: "近故宫", img: "image/dashuaifu.png", mapCoords: { x: 180, y: 170 } },
+            { id: 3, name: "中街", details: "百年商业街，购物天堂", distance: "市中心", img: "image/zhongjie.png", mapCoords: { x: 230, y: 110 } },
+            // 可以添加更多景点数据
+        ];
+
+        const routeOrder = [1, 3, 2]; // 更改路线顺序：故宫 -> 中街 -> 大帅府
+        let selectedAttractionId = attractions.length > 0 ? attractions[0].id : null; // 默认选中第一个
+
+        const cardsContainer = document.getElementById('locationCardsContainer');
+        const routeMapSVG = document.getElementById('routeMapSVG');
+        const routePathSVG = document.getElementById('routePathSVG'); // 确保ID正确
+        const attractionMarkersGroupSVG = document.getElementById('locationMarkersGroupSVG'); // 确保ID正确
+
+
+        function getAttractionById(id) {
+            return attractions.find(attr => attr.id === id);
+        }
+
+        function drawRouteMap() {
+            if (!routeMapSVG || !routePathSVG || !attractionMarkersGroupSVG) {
+                console.error("SVG elements not found for map drawing.");
+                return;
+            }
+
+            let pointsString = "";
+            routeOrder.forEach(id => {
+                const attraction = getAttractionById(id);
+                if (attraction) {
+                    pointsString += `${attraction.mapCoords.x},${attraction.mapCoords.y} `;
+                }
+            });
+            routePathSVG.setAttribute('points', pointsString.trim());
+
+            attractionMarkersGroupSVG.innerHTML = '';
+            attractions.forEach(attraction => {
+                const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                group.classList.add('location-marker-svg');
+                group.style.cursor = 'pointer';
+                group.addEventListener('click', () => {
+                    selectedAttractionId = attraction.id;
+                    renderLocationCards();
+                    drawRouteMap(); // 更新地图标记高亮
+                    const cardElement = cardsContainer.querySelector(`.location-card[data-id='${attraction.id}']`);
+                    if (cardElement) {
+                        cardElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    }
+                });
+
+                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                circle.setAttribute('cx', attraction.mapCoords.x);
+                circle.setAttribute('cy', attraction.mapCoords.y);
+                circle.style.fill = attraction.id === selectedAttractionId ? '#FBBF24' : '#3B82F6'; // 选中黄色，未选中蓝色
+
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute('x', attraction.mapCoords.x);
+                text.setAttribute('y', attraction.mapCoords.y + 22); // 文字在标记点下方
+                text.textContent = attraction.name.split(' ')[0];
+
+                group.appendChild(circle);
+                group.appendChild(text);
+                attractionMarkersGroupSVG.appendChild(group);
+            });
+        }
+
+        function renderLocationCards() {
+            cardsContainer.innerHTML = '';
+            attractions.forEach((attraction, index) => {
+                const card = document.createElement('div');
+                card.classList.add('location-card');
+                card.dataset.id = attraction.id;
+                if (attraction.id === selectedAttractionId) {
+                    card.classList.add('is-center'); // 对应 ui.html 中的居中放大样式
+                }
+
+                card.innerHTML = `
+                    <img src="${attraction.img}" alt="${attraction.name}" onerror="this.onerror=null;this.src='https://placehold.co/340x260/BDC3C7/FFFFFF?text=图片加载失败';">
+                    ${attraction.id === selectedAttractionId ? `<div class="star-on-card">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                    </div>` : ''}
+                    <div class="info">
+                        <div>
+                            <div class="title">${attraction.name}</div>
+                            <div class="details">${attraction.details}</div>
+                        </div>
+                        <div class="distance">${attraction.distance}</div>
+                    </div>
+                    <div class="number-badge">${index + 1}</div>
+                `;
+                card.addEventListener('click', () => {
+                    selectedAttractionId = attraction.id;
+                    renderLocationCards();
+                    drawRouteMap();
+                    // 平滑滚动到视图中央
+                     const cardRect = card.getBoundingClientRect();
+                     const containerRect = cardsContainer.getBoundingClientRect();
+                     const scrollLeft = cardsContainer.scrollLeft + (cardRect.left - containerRect.left) - (containerRect.width / 2) + (cardRect.width / 2);
+                     cardsContainer.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+                });
+                cardsContainer.appendChild(card);
+            });
+             // Add spacers for centering first and last cards
+            const cardWidth = 170; // as defined in CSS
+            const gap = 12; // as defined in CSS for .cards-container
+            const paddingValue = `calc(50vw - ${cardWidth / 2}px - ${gap / 2}px)`;
+
+            const beforeSpacer = document.createElement('div');
+            beforeSpacer.style.flex = `0 0 ${paddingValue}`;
+            cardsContainer.insertBefore(beforeSpacer, cardsContainer.firstChild);
+
+            const afterSpacer = document.createElement('div');
+            afterSpacer.style.flex = `0 0 ${paddingValue}`;
+            cardsContainer.appendChild(afterSpacer);
+
+            updateCenteredCardStyle(); // Call after rendering and adding spacers
+        }
+
+        function updateCenteredCardStyle() {
+            const containerRect = cardsContainer.getBoundingClientRect();
+            const containerCenter = containerRect.left + containerRect.width / 2;
+            let minDistance = Infinity;
+            let centeredCard = null;
+
+            const cards = cardsContainer.querySelectorAll('.location-card');
+            cards.forEach(card => {
+                card.classList.remove('is-center');
+                const cardRect = card.getBoundingClientRect();
+                const cardCenter = cardRect.left + cardRect.width / 2;
+                const distance = Math.abs(containerCenter - cardCenter);
+
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    centeredCard = card;
+                }
+            });
+
+            if (centeredCard) {
+                centeredCard.classList.add('is-center');
+            }
+        }
+
+
+        function initApp() {
+            renderLocationCards();
+            drawRouteMap();
+            updateCenteredCardStyle();
+        }
+
+        document.addEventListener('DOMContentLoaded', initApp);
+
+        let scrollTimeout;
+        cardsContainer.addEventListener('scroll', () => {
+            requestAnimationFrame(updateCenteredCardStyle);
+        });
+
+        window.addEventListener('resize', () => {
+            renderLocationCards(); // Re-render cards to adjust spacers
+            updateCenteredCardStyle();
+            drawRouteMap();
+        });
+
+        // Filter button functionality
+        document.querySelectorAll('.filter-button').forEach(button => {
+            button.addEventListener('click', function() {
+                document.querySelectorAll('.filter-button').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                console.log("筛选条件:", this.textContent.trim());
+            });
+        });
+
+        // Bottom nav functionality
+        document.querySelectorAll('.nav-item').forEach(button => {
+            button.addEventListener('click', function() {
+                document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                console.log("导航至:", this.querySelector('span') ? this.querySelector('span').textContent.trim() : this.textContent.trim());
+            });
+        });
+
+        // Back button functionality
+        document.querySelector('.back-button-custom').addEventListener('click', () => {
+            console.log("点击了返回按钮");
+            // window.history.back(); // Uncomment for actual back functionality
+        });
+
+    </script>
+</body>
+</html>
